@@ -741,116 +741,52 @@ function prevQ(n) {
 }
 
 function submitSurvey() {
-  // Google Forms entry IDs
-  var entryIds = {
-    q1: 'entry.255923407',
-    q2: 'entry.937131579',
-    q3: 'entry.1359378086',
-    q4: 'entry.1168428996',
-    q5: 'entry.1655784992',
-    q6: 'entry.1082374583',
-    q7: 'entry.1761282173'
-  };
+  var webAppUrl = 'https://script.google.com/macros/s/AKfycbzrHzQ7fwBKdTAzMcuM4YscaXb8y0MTniI-bZ7BWK2PcLtrRMqijMJtFn4U5mRK-3Cl/exec';
 
-  var formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfpyOdoqWpVun9IuTRNfHkdirly46ntsVKgSGEMF7yxjwrR6Q/formResponse';
-
-  // Collect all answers
-  var q1card = document.getElementById('q1');
-  var q1sel = q1card.querySelector('.option-btn.selected');
-  var q1val = q1sel ? q1sel.dataset.value : '';
-  var q1other = '';
-  if (q1val === 'אחר') {
-    var other1El = document.getElementById('other1');
-    q1other = other1El && other1El.value.trim() ? other1El.value.trim() : '';
-    q1val = '__other_option__';
+  // Collect answers
+  function getSelected(qId) {
+    var card = document.getElementById(qId);
+    var sel = card.querySelector('.option-btn.selected');
+    return sel ? sel.dataset.value : '';
   }
 
-  var q2card = document.getElementById('q2');
-  var q2sel = q2card.querySelector('.option-btn.selected');
-  var q2val = q2sel ? q2sel.dataset.value : '';
+  function getMultiSelected(qId) {
+    var card = document.getElementById(qId);
+    var sels = card.querySelectorAll('.option-btn.selected');
+    var vals = [];
+    sels.forEach(function(b) { vals.push(b.dataset.value); });
+    return vals;
+  }
 
-  var q3card = document.getElementById('q3');
-  var q3sel = q3card.querySelector('.option-btn.selected');
-  var q3val = q3sel ? q3sel.dataset.value : '';
-
-  var q4card = document.getElementById('q4');
-  var q4sels = q4card.querySelectorAll('.option-btn.selected');
-  var q4vals = [];
-  var q4other = '';
-  q4sels.forEach(function(b) {
-    if (b.dataset.value === 'אחר') {
-      q4vals.push('__other_option__');
-      var other4El = document.getElementById('other4');
-      q4other = other4El && other4El.value.trim() ? other4El.value.trim() : '';
-    } else {
-      q4vals.push(b.dataset.value);
-    }
-  });
-
-  var q5card = document.getElementById('q5');
-  var q5sels = q5card.querySelectorAll('.option-btn.selected');
-  var q5vals = [];
-  var q5other = '';
-  q5sels.forEach(function(b) {
-    if (b.dataset.value === 'אחר') {
-      q5vals.push('__other_option__');
-      var other5El = document.getElementById('other5');
-      q5other = other5El && other5El.value.trim() ? other5El.value.trim() : '';
-    } else {
-      q5vals.push(b.dataset.value);
-    }
-  });
-
-  var q6card = document.getElementById('q6');
-  var q6sel = q6card.querySelector('.option-btn.selected');
-  var q6val = q6sel ? q6sel.dataset.value : '';
-
+  var q1val = getSelected('q1');
+  var q2val = getSelected('q2');
+  var q3val = getSelected('q3');
+  var q4vals = getMultiSelected('q4');
+  var q5vals = getMultiSelected('q5');
+  var q6val = getSelected('q6');
   var q7val = document.getElementById('openAnswer7').value.trim();
 
-  // Build URL params
+  // Build URL with params
   var params = [];
-  params.push(encodeURIComponent(entryIds.q1) + '=' + encodeURIComponent(q1val));
-  if (q1val === '__other_option__' && q1other) {
-    params.push(encodeURIComponent(entryIds.q1 + '.other_option_response') + '=' + encodeURIComponent(q1other));
-  }
-  params.push(encodeURIComponent(entryIds.q2) + '=' + encodeURIComponent(q2val));
-  params.push(encodeURIComponent(entryIds.q3) + '=' + encodeURIComponent(q3val));
-  
-  q4vals.forEach(function(v) {
-    params.push(encodeURIComponent(entryIds.q4) + '=' + encodeURIComponent(v));
-  });
-  if (q4other) {
-    params.push(encodeURIComponent(entryIds.q4 + '.other_option_response') + '=' + encodeURIComponent(q4other));
-  }
-  
-  q5vals.forEach(function(v) {
-    params.push(encodeURIComponent(entryIds.q5) + '=' + encodeURIComponent(v));
-  });
-  if (q5other) {
-    params.push(encodeURIComponent(entryIds.q5 + '.other_option_response') + '=' + encodeURIComponent(q5other));
-  }
-  
-  params.push(encodeURIComponent(entryIds.q6) + '=' + encodeURIComponent(q6val));
-  params.push(encodeURIComponent(entryIds.q7) + '=' + encodeURIComponent(q7val));
+  params.push('q1=' + encodeURIComponent(q1val));
+  params.push('q2=' + encodeURIComponent(q2val));
+  params.push('q3=' + encodeURIComponent(q3val));
+  q4vals.forEach(function(v) { params.push('q4=' + encodeURIComponent(v)); });
+  q5vals.forEach(function(v) { params.push('q5=' + encodeURIComponent(v)); });
+  params.push('q6=' + encodeURIComponent(q6val));
+  params.push('q7=' + encodeURIComponent(q7val));
 
-  var submitUrl = formBaseUrl + '?' + params.join('&');
+  var fullUrl = webAppUrl + '?' + params.join('&');
 
-  // Method 1: hidden img tag (bypasses CORS completely)
-  var img = new Image();
-  img.src = submitUrl;
-
-  // Method 2: also try hidden iframe as backup
-  var iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = submitUrl;
-  document.body.appendChild(iframe);
+  // Send via fetch
+  fetch(fullUrl, { mode: 'no-cors' });
 
   // Show thank you screen
   setTimeout(function() {
     document.getElementById('surveyWrapper').classList.remove('active');
     document.getElementById('thankyouScreen').classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 1000);
+  }, 1500);
 }
 </script>
 </body>
