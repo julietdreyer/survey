@@ -766,33 +766,38 @@ function submitSurvey() {
   var q6val = getSelected('q6');
   var q7val = document.getElementById('openAnswer7').value.trim();
 
-  // Build URL with params
-  var params = [];
-  params.push('q1=' + encodeURIComponent(q1val));
-  params.push('q2=' + encodeURIComponent(q2val));
-  params.push('q3=' + encodeURIComponent(q3val));
-  q4vals.forEach(function(v) { params.push('q4=' + encodeURIComponent(v)); });
-  q5vals.forEach(function(v) { params.push('q5=' + encodeURIComponent(v)); });
-  params.push('q6=' + encodeURIComponent(q6val));
-  params.push('q7=' + encodeURIComponent(q7val));
-  // Cache buster - unique per submission
-  params.push('_t=' + Date.now());
+  // Create hidden iframe
+  var iframeName = 'submit_frame_' + Date.now();
+  var iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
 
-  var fullUrl = webAppUrl + '?' + params.join('&');
+  // Create form that posts to iframe
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = webAppUrl;
+  form.target = iframeName;
+  form.style.display = 'none';
 
-  // Method 1: JSONP script tag with unique callback
-  var cbName = 'cb_' + Date.now();
-  window[cbName] = function() {};
-  var script = document.createElement('script');
-  script.src = fullUrl + '&callback=' + cbName;
-  document.body.appendChild(script);
+  function addField(name, value) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
 
-  // Method 2: Image beacon as backup
-  var img = new Image();
-  img.src = fullUrl;
+  addField('q1', q1val);
+  addField('q2', q2val);
+  addField('q3', q3val);
+  q4vals.forEach(function(v) { addField('q4', v); });
+  q5vals.forEach(function(v) { addField('q5', v); });
+  addField('q6', q6val);
+  addField('q7', q7val);
 
-  // Method 3: fetch as another backup
-  try { fetch(fullUrl, { mode: 'no-cors' }); } catch(e) {}
+  document.body.appendChild(form);
+  form.submit();
 
   // Show thank you screen
   setTimeout(function() {
