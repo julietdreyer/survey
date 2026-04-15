@@ -778,15 +778,17 @@ function submitSurvey() {
 
   var fullUrl = webAppUrl + '?' + params.join('&');
 
-  // Send via fetch
-  fetch(fullUrl, { mode: 'no-cors' });
+  // Send via script tag (JSONP - most reliable cross-origin method)
+  var script = document.createElement('script');
+  script.src = fullUrl + '&callback=surveyCallback';
+  document.body.appendChild(script);
 
   // Show thank you screen
   setTimeout(function() {
     document.getElementById('surveyWrapper').classList.remove('active');
     document.getElementById('thankyouScreen').classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 1500);
+  }, 2000);
 }
 </script>
 </body>
