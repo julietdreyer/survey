@@ -775,13 +775,24 @@ function submitSurvey() {
   q5vals.forEach(function(v) { params.push('q5=' + encodeURIComponent(v)); });
   params.push('q6=' + encodeURIComponent(q6val));
   params.push('q7=' + encodeURIComponent(q7val));
+  // Cache buster - unique per submission
+  params.push('_t=' + Date.now());
 
   var fullUrl = webAppUrl + '?' + params.join('&');
 
-  // Send via script tag (JSONP - most reliable cross-origin method)
+  // Method 1: JSONP script tag with unique callback
+  var cbName = 'cb_' + Date.now();
+  window[cbName] = function() {};
   var script = document.createElement('script');
-  script.src = fullUrl + '&callback=surveyCallback';
+  script.src = fullUrl + '&callback=' + cbName;
   document.body.appendChild(script);
+
+  // Method 2: Image beacon as backup
+  var img = new Image();
+  img.src = fullUrl;
+
+  // Method 3: fetch as another backup
+  try { fetch(fullUrl, { mode: 'no-cors' }); } catch(e) {}
 
   // Show thank you screen
   setTimeout(function() {
